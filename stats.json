@@ -1,0 +1,196 @@
+{
+  "rows": [
+    {
+      "route": "1",
+      "old": 5.39,
+      "current": 0.0
+    },
+    {
+      "route": "2",
+      "old": 8.43,
+      "current": 0.0
+    },
+    {
+      "route": "3",
+      "old": 8.61,
+      "current": 0.0
+    },
+    {
+      "route": "4",
+      "old": 8.65,
+      "current": 0.0
+    },
+    {
+      "route": "5",
+      "old": 8.96,
+      "current": 0.0
+    },
+    {
+      "route": "6",
+      "old": 7.1,
+      "current": 0.0
+    },
+    {
+      "route": "7",
+      "old": 7.37,
+      "current": 0.0
+    },
+    {
+      "route": "8",
+      "old": 6.01,
+      "current": 0.0
+    },
+    {
+      "route": "9",
+      "old": 2.78,
+      "current": 0.0
+    },
+    {
+      "route": "10",
+      "old": 2.27,
+      "current": 0.0
+    },
+    {
+      "route": "11",
+      "old": 8.09,
+      "current": 22.06
+    },
+    {
+      "route": "12",
+      "old": 0.0,
+      "current": 24.74
+    },
+    {
+      "route": "13",
+      "old": 0.0,
+      "current": 13.61
+    },
+    {
+      "route": "14",
+      "old": 0.0,
+      "current": 23.86
+    },
+    {
+      "route": "15",
+      "old": 0.0,
+      "current": 16.38
+    },
+    {
+      "route": "16",
+      "old": 0.0,
+      "current": 17.39
+    },
+    {
+      "route": "17",
+      "old": 0.0,
+      "current": 12.74
+    },
+    {
+      "route": "21",
+      "old": 0.0,
+      "current": 25.69
+    },
+    {
+      "route": "22",
+      "old": 0.0,
+      "current": 23.97
+    },
+    {
+      "route": "23",
+      "old": 0.0,
+      "current": 13.74
+    },
+    {
+      "route": "25",
+      "old": 0.0,
+      "current": 16.59
+    },
+    {
+      "route": "26",
+      "old": 0.0,
+      "current": 18.22
+    },
+    {
+      "route": "27",
+      "old": 0.0,
+      "current": 16.26
+    },
+    {
+      "route": "28",
+      "old": 0.0,
+      "current": 11.41
+    },
+    {
+      "route": "29",
+      "old": 0.0,
+      "current": 14.15
+    },
+    {
+      "route": "112",
+      "old": 0.0,
+      "current": 4.37
+    },
+    {
+      "route": "201",
+      "old": 0.0,
+      "current": 13.3
+    },
+    {
+      "route": "202",
+      "old": 0.0,
+      "current": 15.41
+    },
+    {
+      "route": "112Ext",
+      "old": 0.0,
+      "current": 5.9
+    },
+    {
+      "route": "14Ext",
+      "old": 0.0,
+      "current": 1.05
+    },
+    {
+      "route": "201Ext",
+      "old": 0.0,
+      "current": 4.34
+    },
+    {
+      "route": "23Ext",
+      "old": 0.0,
+      "current": 1.69
+    },
+    {
+      "route": "24 Ext",
+      "old": 0.0,
+      "current": 1.24
+    },
+    {
+      "route": "26Ext",
+      "old": 0.0,
+      "current": 2.69
+    },
+    {
+      "route": "26Ext2",
+      "old": 0.0,
+      "current": 1.69
+    },
+    {
+      "route": "29Ext",
+      "old": 0.0,
+      "current": 1.78
+    }
+  ],
+  "old_total": 73.65,
+  "cur_total": 324.31,
+  "sc_total": 22.23,
+  "old_avg": 6.7,
+  "sc_avg": "—",
+  "cur_avg": 12.01,
+  "pop_1943": 114966,
+  "pop_1925": 72217,
+  "pop_current": 397532,
+  "old_per_1k": 0.64,
+  "sc_per_1k": 0.31,
+  "cur_per_1k": 0.82
+}

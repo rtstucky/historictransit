@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wichita Bus Routes — 1943 vs Today</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --old-color:        #e07b39;
+            --new-color:        #4a90d9;
+            --streetcar-color:  #7b4db5;
+            --border:           rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body, html {
+            font-family: 'IBM Plex Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            color: black;
+        }
+
+        #container { display: flex; height: 100vh; }
+
+        #map {
+            position: fixed;
+            top: 0; bottom: 0;
+            width: 75%;
+        }
+
+        #sidebar {
+            position: fixed;
+            top: 0; right: 0;
+            width: 25%;
+            height: 100vh;
+            overflow-y: auto;
+            background: white;
+            padding: 2em;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ── Title ── */
+        .title-box { position: relative; margin-bottom: 4px; }
+        .title-box::before, .title-box::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            height: 3px;
+            width: 40px;
+            background: black;
+        }
+        .title-box::before { left: 0; }
+        .title-box::after  { right: 0; }
+        .title-box h1 {
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid black;
+            border-bottom: none;
+            padding: 8px 12px;
+        }
+        .title-box-btm { height: 3px; display: flex; justify-content: space-between; }
+        .title-box-btm::before { content: ''; width: 20%; background: black; }
+        .title-box-btm::after  { content: ''; width: 40%; background: black; }
+        #sidebar-header p { font-size: 13px; opacity: 0.7; margin-top: 6px; }
+
+        /* ── Toggle buttons ── */
+        .toggles {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 10px;
+            border: 1px solid currentColor;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            transition: opacity 0.15s, background 0.15s;
+            background: transparent;
+        }
+
+        .toggle-btn .swatch {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .toggle-btn.on  { opacity: 1; }
+        .toggle-btn.off { opacity: 0.3; }
+
+        /* ── Section label ── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+
+        /* ── Summary grid ── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 4px;
+            font-size: 11px;
+        }
+        .summary-grid .col-header {
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding-bottom: 4px;
+        }
+        .summary-grid .row-label { opacity: 0.7; }
+        .summary-grid .val-old { color: var(--old-color); font-weight: 600; }
+        .summary-grid .val-sc  { color: var(--streetcar-color); font-weight: 600; }
+        .summary-grid .val-new { color: var(--new-color); font-weight: 600; }
+
+        @media (max-width: 768px) {
+            body, html { overflow: auto; }
+            #container { flex-direction: column; height: auto; }
+            #map { position: relative; width: 100%; height: 50vh; }
+            #sidebar { position: relative; width: 100%; height: auto; overflow-y: visible; }
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <div id="map"></div>
+    <div id="sidebar">
+
+        <div id="sidebar-header">
+            <div class="title-box">
+                <h1>Wichita Transit</h1>
+                <div class="title-box-btm"></div>
+            </div>
+        </div>
+
+        <div class="toggles">
+            <button class="toggle-btn off" id="toggle-streetcar" style="color:var(--streetcar-color);" onclick="toggleLayer('streetcar')">
+                <div class="swatch" style="background:var(--streetcar-color);"></div>
+                1925 Streetcars
+            </button>
+            <button class="toggle-btn on" id="toggle-old" style="color:var(--old-color);" onclick="toggleLayer('old')">
+                <div class="swatch" style="background:var(--old-color);"></div>
+                1943 Bus Routes
+            </button>
+            <button class="toggle-btn off" id="toggle-new" style="color:var(--new-color);" onclick="toggleLayer('new')">
+                <div class="swatch" style="background:var(--new-color);"></div>
+                Current Bus Routes
+            </button>
+        </div>
+
+        <div>
+            <div class="section-label">Summary</div>
+            <div class="summary-grid" id="summary-grid">Loading...</div>
+        </div>
+
+        <div>
+            <div class="section-label">Sources</div>
+            <div style="font-size: 11px; line-height: 1.6;">
+                <div style="margin-bottom: 8px;">
+                    <span style="color:var(--streetcar-color); font-weight:700;">1925 Streetcars</span><br>
+                    Wichita Public Library<br>
+                    <span style="opacity:0.6;">Barcode: 3 3278 19622246 0</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="color:var(--old-color); font-weight:700;">1943 Bus Routes</span><br>
+                    <a href="https://cdm17408.contentdm.oclc.org/digital/collection/Wichita/id/2179/rec/115" target="_blank" style="color:black;">Major Street Plan, Wichita KS</a>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="color:var(--new-color); font-weight:700;">Current Bus Routes</span><br>
+                    <a href="https://data-cityofwichita.hub.arcgis.com/items/65752c7fd5664de9bf3f4bb2f7d362d8" target="_blank" style="color:black;">City of Wichita Open Data</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const OLD_COLOR        = '#e07b39';
+    const NEW_COLOR        = '#4a90d9';
+    const STREETCAR_COLOR  = '#7b4db5';
+    const OLD_HIGHLIGHT    = '#c0531a';
+    const NEW_HIGHLIGHT    = '#1a5fa8';
+    const SC_HIGHLIGHT     = '#4e2380';
+
+    const map = L.map('map').setView([37.688, -97.336], 12);
+
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png?api_key=4f4c222f-cf1d-412d-a93a-e8bdaf1e4a3d', {
+        maxZoom: 20,
+        attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://stamen.com/">Stamen Design</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    let oldLayer = null, newLayer = null, streetcarLayer = null;
+    let oldVisible = true, newVisible = false, streetcarVisible = false;
+
+    // annotation markers grouped by layer key
+    const annotationLayers = { old: [], new: [], streetcar: [] };
+
+    function toggleLayer(which) {
+        const map_actions = {
+            old:       [() => oldVisible,       v => oldVisible = v,       () => oldLayer,       'toggle-old'],
+            new:       [() => newVisible,        v => newVisible = v,       () => newLayer,       'toggle-new'],
+            streetcar: [() => streetcarVisible,  v => streetcarVisible = v, () => streetcarLayer, 'toggle-streetcar'],
+        };
+        const [getV, setV, getL, btnId] = map_actions[which];
+        const nowOn = !getV();
+        setV(nowOn);
+        const layer = getL();
+        if (layer) nowOn ? layer.addTo(map) : map.removeLayer(layer);
+        // show/hide annotations for this layer
+        annotationLayers[which].forEach(m => nowOn ? m.addTo(map) : map.removeLayer(m));
+        document.getElementById(btnId).classList.toggle('on', nowOn);
+        document.getElementById(btnId).classList.toggle('off', !nowOn);
+    }
+
+    // ── Load GeoJSON ──────────────────────────────────────────
+    fetch('old_routes.geojson')
+        .then(r => r.json())
+        .then(data => {
+            oldLayer = L.geoJSON(data, {
+                style: { color: OLD_COLOR, weight: 4, opacity: 0.85 },
+                onEachFeature(feature, layer) {
+                    const route = String(feature.properties.Route ?? '').replace('.0','').trim();
+                    layer.bindTooltip(`1943 Bus — Route ${route}`, { sticky: true });
+                }
+            }).addTo(map);
+        });
+
+    fetch('transit_routes.geojson')
+        .then(r => r.json())
+        .then(data => {
+            newLayer = L.geoJSON(data, {
+                style: { color: NEW_COLOR, weight: 4, opacity: 0.85 },
+                onEachFeature(feature, layer) {
+                    const route = String(feature.properties.Route ?? '').trim();
+                    const name  = feature.properties.NAME ?? '';
+                    layer.bindTooltip(`Current Bus — Route ${route}${name ? ' · ' + name : ''}`, { sticky: true });
+                }
+            }); // not added to map by default
+        });
+
+    fetch('streetcar_routes.geojson')
+        .then(r => r.json())
+        .then(data => {
+            streetcarLayer = L.geoJSON(data, {
+                style: { color: STREETCAR_COLOR, weight: 4, opacity: 0.85, dashArray: '6 4' },
+                onEachFeature(feature, layer) {
+                    const year = feature.properties.Year ?? '';
+                    layer.bindTooltip(`Streetcar — ${year}`, { sticky: true });
+                }
+            }); // not added to map by default
+        });
+
+    // ── Log lat/lng on click for annotations ─────────────────
+    map.on('click', e => console.log(e.latlng.lat, e.latlng.lng));
+
+    // ── Annotations ───────────────────────────────────────────
+    const annotationIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+            background: black;
+            color: white;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 6px;
+            white-space: nowrap;
+            cursor: default;
+            pointer-events: none;
+        ">●</div>`,
+        iconAnchor: [6, 6]
+    });
+
+    fetch('annotations.json')
+        .then(r => r.json())
+        .then(annotations => {
+            annotations.forEach(a => {
+                // determine which layer this annotation belongs to by color
+                let layerKey = 'old';
+                if (a.color === NEW_COLOR || a.color === '#4a90d9')       layerKey = 'new';
+                else if (a.color === STREETCAR_COLOR || a.color === '#7b4db5') layerKey = 'streetcar';
+
+                const visibleNow = layerKey === 'old' ? oldVisible : layerKey === 'new' ? newVisible : streetcarVisible;
+
+                const icon = L.divIcon({
+                    className: '',
+                    html: `<div style="
+                        background: white;
+                        color: black;
+                        border: 2px solid ${a.color || OLD_COLOR};
+                        font-family: 'IBM Plex Mono', monospace;
+                        font-size: 11px;
+                        font-weight: 600;
+                        padding: 5px 8px;
+                        white-space: nowrap;
+                        line-height: 1.4;
+                        display: inline-block;
+                    ">${a.label}</div>`,
+                    iconAnchor: [0, 0]
+                });
+
+                const marker = L.marker([a.lat, a.lng], { icon, interactive: false });
+                annotationLayers[layerKey].push(marker);
+                if (visibleNow) marker.addTo(map);
+            });
+        })
+        .catch(() => {}); // silently skip if no annotations.json yet
+
+    // ── Summary ───────────────────────────────────────────────
+    fetch('stats.json')
+        .then(r => r.json())
+        .then(s => {
+            document.getElementById('summary-grid').innerHTML = `
+                <div class="col-header"></div>
+                <div class="col-header" style="color:var(--streetcar-color);">1925</div>
+                <div class="col-header" style="color:var(--old-color);">1943</div>
+                <div class="col-header" style="color:var(--new-color);">Today</div>
+
+                <div class="row-label">Total miles</div>
+                <div class="val-sc">${s.sc_total}</div>
+                <div class="val-old">${s.old_total}</div>
+                <div class="val-new">${s.cur_total}</div>
+
+                <div class="row-label">Avg route</div>
+                <div class="val-sc">${s.sc_avg}</div>
+                <div class="val-old">${s.old_avg} mi</div>
+                <div class="val-new">${s.cur_avg} mi</div>
+
+                <div class="row-label">Population</div>
+                <div class="val-sc">${s.pop_1925.toLocaleString()}</div>
+                <div class="val-old">${s.pop_1943.toLocaleString()}</div>
+                <div class="val-new">${s.pop_current.toLocaleString()}</div>
+
+                <div class="row-label">Mi / 1k pop</div>
+                <div class="val-sc">${s.sc_per_1k}</div>
+                <div class="val-old">${s.old_per_1k}</div>
+                <div class="val-new">${s.cur_per_1k}</div>
+            `;
+        });
+</script>
+</body>
+</html>
